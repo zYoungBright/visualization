@@ -1,0 +1,896 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>数据可视化</title>
+    <link rel="stylesheet" href="css/index.css" />
+    <link rel="stylesheet" href="./css/liMarquee.css">
+    <script src="../data/cityInfo.js"></script>
+    <script src="../data/cityCompanytype.js"></script>
+    <script src="../data/cityJobNum.js"></script>
+    <script src="../data/citySalary.js"></script>
+    <script src="../data/keywordNum.js"></script>
+    <script src="../data/daySalary.js"></script>
+    <script src="../data/description.js"></script>
+    <script src="../data/allData.js"></script>
+    <script src="../data/validCity.js"></script>
+    <script src="../data/ExperienceDegreeSalary.js"></script>
+    <script src="../data/symbol.js"></script>
+    <script src='./js/echarts.min.js'></script>
+    <script src='./js/echarts-wordcloud.js'></script>
+    <script src="js/flexible.js"></script>
+    <!-- <script src="js/echarts.min.js"></script> -->
+    <script src="js/jquery.js"></script>
+    <script src="./js/jquery.liMarquee.js"></script>
+    <!-- 引入china.js 完成地图模块 -->
+    <script src="js/china.js"></script>
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/echarts-gl@2/dist/echarts-gl.min.js"></script>
+</head>
+
+<body>
+    <canvas id="canv" width="1920" height="572" style="position: absolute; z-index: 0;opacity: .5"></canvas>
+    <script src="./js/spot.js"></script>
+    <header>
+        <h1>互联网行业分析</h1>
+        <div class="show-time"></div>
+        <script src="./js/time.js"></script>
+    </header>
+
+    <section class="mainbox">
+        <!-- 左侧盒子 -->
+        <div class="column" style="width: 30vm;">
+            <div class="panel bar">
+                <h2>3D柱状图-不同经验(年)学历的平均工资(万)</h2>
+                <!-- 图表放置盒子 -->
+                <div class="chart" id="3DBar"></div>
+                <!-- 伪元素绘制盒子下边角 -->
+                <div class="panel-footer"></div>
+            </div>
+            <div class="panel line">
+                <h2>可滚动饼图-岗位</h2>
+                <div class="chart" id='pie'></div>
+                <div class="panel-footer"></div>
+            </div>
+            <div class="panel pie">
+                <h2>轮播-随机招岗位信息</h2>
+                <div class="chart">
+                    <ul id="carousel">
+                    </ul>
+                </div>
+                <div class="panel-footer"></div>
+            </div>
+        </div>
+        <!-- 中间盒子 -->
+        <div class="column" style="width: 40vm;">
+            <!-- 头部 no模块 -->
+            <div class="no">
+                <div class="no-hd" style="width: 100%;">
+                    <div class="ul">
+                        <div class="li">94647</div>
+                        <div class="li">9957</div>
+                    </div>
+                </div>
+                <div class="no-bd" style="width: 100%;">
+                    <div class="ul">
+                        <div class="li">数据总量</div>
+                        <div class="li">企业个数</div>
+                    </div>
+                </div>
+            </div>
+            <!-- map模块 -->
+            <div class="map">
+                <div class="map1"></div>
+                <div class="map2"></div>
+                <div class="map3"></div>
+                <div class="chart">
+                    <div style="width: 100%;height: 100%;" id="scatterMap"></div>
+                </div>
+            </div>
+        </div>
+        <!-- 右侧盒子 -->
+        <div class="column" style="width: 30vm;">
+            <div class="panel bar2">
+                <h2>雷达图-不同城市的公司类型数量</h2>
+                <div class="chart" id="radar"></div>
+                <div class="panel-footer"></div>
+            </div>
+            <div class="panel line2">
+                <h2>折线图-不同日期平均薪资</h2>
+                <div class="chart" id="line"></div>
+                <div class="panel-footer"></div>
+            </div>
+            <div class="panel pie2">
+                <h2>词云-福利待遇</h2>
+                <div class="chart" id='wordCloud'></div>
+                <div class="panel-footer"></div>
+            </div>
+        </div>
+    </section>
+    <!-- 可滚动饼图 -->
+    <script>
+        var chartDom = document.getElementById('pie');
+        var myChart = echarts.init(chartDom);
+        var option;
+
+        var data = genData();
+
+        option = {
+            tooltip: {
+                trigger: 'item',
+                formatter: '{a} <br/>{b} : {c} ({d}%)'
+            },
+            legend: {
+                type: 'scroll',
+                orient: 'vertical',
+                right: "right",
+                color: '#fff',
+                data: data.legendData,
+                textStyle: {
+                    color: '#fff',
+                    fontSize: 6
+                },
+                selected: data.selected,
+                pageIconColor: '#fff',
+                pageIconnactiveColor: 'fff',
+                pageIconSize: 10,
+                pageTextStyle: {
+                    color: '#fff'
+                },
+            },
+            series: [
+                {
+                    name: '姓名',
+                    type: 'pie',
+                    radius: '55%',
+                    center: ['40%', '50%'],
+                    data: data.seriesData,
+                    emphasis: {
+                        itemStyle: {
+                            shadowBlur: 10,
+                            shadowOffsetX: 0,
+                            shadowColor: 'rgba(0, 0, 0, 0.5)'
+                        }
+                    }
+                }
+            ]
+        };
+
+
+
+
+        function genData() {
+
+            var nameList = [];
+            var legendData = [];
+            var seriesData = [];
+            for (i = 0; keywordNum[i] != null; i++) {
+                legendData.push(keywordNum[i].keyword);
+                seriesData.push({
+                    name: keywordNum[i].keyword,
+                    value: keywordNum[i].value
+                });
+            }
+
+            return {
+                legendData: legendData,
+                seriesData: seriesData
+            };
+        }
+
+        option && myChart.setOption(option);
+
+    </script>
+    <!-- 3D柱状图 -->
+    <script>
+        var chartDom = document.getElementById('3DBar');
+        var myChart = echarts.init(chartDom);
+        var option;
+        var experiences = ['无需经验', '在校生/应届生', 1, 2, 3, '3年以上'];
+        var degrees = ["中专", "高中", "大专", "本科", "硕士", "博士"];
+        var data = []
+        for (i = 0; ExperienceDegreeSalary[i] != null; i++) {
+            if (ExperienceDegreeSalary[i].experience > 3) {
+                ExperienceDegreeSalary[i].experience = '3年以上'
+            }
+            var experienceIndex = experiences.findIndex(item => item == ExperienceDegreeSalary[i].experience);
+            var degreeIndex = degrees.findIndex(item => item == ExperienceDegreeSalary[i].degree);
+            data.push([degreeIndex, experienceIndex, ExperienceDegreeSalary[i].salary])
+        }
+        option = {
+            tooltip: {},
+            visualMap: {
+                max: 4,
+                inRange: {
+                    color: ['#313695', '#4575b4', '#74add1', '#abd9e9', '#e0f3f8', '#ffffbf', '#fee090', '#fdae61', '#f46d43', '#d73027', '#a50026']
+                }
+            },
+            xAxis3D: {
+                type: 'category',
+                data: experiences,
+                axisLine: {  //这是x轴文字颜色
+                    lineStyle: {
+                        color: "#fff",
+                    }
+                }
+            },
+            yAxis3D: {
+                type: 'category',
+                data: degrees,
+                axisLine: {  //这是x轴文字颜色
+                    lineStyle: {
+                        color: "#fff",
+                    }
+                }
+            },
+            zAxis3D: {
+                type: 'value',
+                axisLine: {  //这是x轴文字颜色
+                    lineStyle: {
+                        color: "#fff",
+                    }
+                }
+            },
+            grid3D: {
+                boxWidth: 230,
+                boxDepth: 80,
+                viewControl: {
+                    // projection: 'orthographic'
+                },
+                light: {
+                    main: {
+                        intensity: 1.2,
+                        shadow: true
+                    },
+                    ambient: {
+                        intensity: 0.3
+                    }
+                }
+            },
+            series: [{
+                type: 'bar3D',
+                data: data.map(function (item) {
+                    return {
+                        value: [item[1], item[0], item[2]],
+                    }
+                }),
+                shading: 'lambert',
+
+                label: {
+                    fontSize: 16,
+                    borderWidth: 1
+                },
+                emphasis: {
+                    label: {
+                        fontSize: 20,
+                        color: '#900'
+                    },
+                    itemStyle: {
+                        color: '#900'
+                    }
+                }
+            }]
+        }
+        myChart.setOption(option);
+        window.onresize = function () {
+            myChart.resize();
+        }
+
+    </script>
+    <!-- 轮播 -->
+    <script>
+        var data = []
+        for (i = 0; i < 13; i++) {
+            data.push(allData[Math.floor((Math.random() * 90000))])
+        }
+        var contentHtml = ''
+        for (i = 0; i < 13; i++) {
+            contentHtml +=
+                `
+        <li>
+            <a href="https://jobs.51job.com/beijing-dcq/${data[i].jobid}.html?s=sou_sou_soulb&t=0">
+            <div style="overflow:hidden;white-space:nowrap;text-overflow:ellipsis;">
+            ${data[i].title} ${data[i].place} ${data[i].salary} ${data[i].company_name}
+            </div>
+            </a>
+        </li>
+    `
+        }
+        document.getElementById("carousel").innerHTML = contentHtml;
+        var play = () => {
+            var newData = allData[Math.floor((Math.random() * 90000))]
+            var carousel = document.getElementById("carousel")
+            carousel.innerHTML += `
+        <li>
+            <a href="https://jobs.51job.com/beijing-dcq/${newData.jobid}.html?s=sou_sou_soulb&t=0">
+            <div style="overflow:hidden;white-space:nowrap;text-overflow:ellipsis;">
+            ${newData.title} ${newData.place} ${newData.salary} ${newData.company_name}
+            </div>
+            </a>
+        </li>
+    `
+            var deleteNode = carousel.getElementsByTagName("li")[0]
+            carousel.removeChild(deleteNode);
+        }
+        var creatTimer = () => {
+            timer = self.setInterval("play()", 1 * 1000);
+        }
+        creatTimer()
+    </script>
+    <!-- 雷达图 -->
+    <script>
+        var chartDom = document.getElementById('radar');
+        var myChart = echarts.init(chartDom);
+        var types = ['创业公司', '上市公司', '民营公司', '外资（欧美）', '合资', '外资（非欧美）', '国企', '事业单位', '非营利组织', '政府机关', '外企代表处']
+        var tidy = () => {
+            var data = {}
+            for (i = 0; validCity[i] != null; i++) {
+                data[validCity[i]] = []
+            }
+            for (i = 0; cityCompanytype[i] != null; i++) {
+                for (y = 0; types[y] != null; y++) {
+                    if (types[y] == cityCompanytype[i].companytype) {
+                        data[cityCompanytype[i].city][y] = { name: types[y], value: cityCompanytype[i].value }
+                    }
+                }
+            }
+            for (x in data) {
+                for (i = 0; i < types.length; i++) {
+                    if (data[x][i] == undefined) {
+                        data[x][i] = { name: types[i], value: 0 }
+                    }
+                }
+            }
+            return data
+        }
+        var data = tidy()
+        var option = {
+            title: {
+                text: '北京',
+                left: '60',
+                top: 0,
+                textAlign: 'center',
+                textStyle: {
+                    color: '#fff',
+                    fontSize: 14,
+                    fontWeight: 0
+                }
+            },
+            color: ["#EAEA26", "#906BF9", "#FE5656", "#01E17E", "#3DD1F9", "#FFAD05"],
+            grid: {
+                left: -100,
+                top: 50,
+                bottom: 10,
+                right: 10,
+                containLabel: true
+            },
+            tooltip: {
+                trigger: 'item',
+                formatter: "{b} : {c} ({d}%)"
+            },
+            legend: {
+                type: "scroll",
+                orient: "horizontal",
+                left: "center",
+                bottom: 0,
+                left: "center",
+                alert: 'auto',
+                itemWidth: 25,
+                itemHeight: 14,
+                itemGap: 10,
+                textStyle: {
+                    color: '#A3E2F4',
+                    fontSize: 12,
+                    fontWeight: 0
+                },
+                data: types
+            },
+            polar: {},
+            angleAxis: {
+                interval: 1,
+                type: 'category',
+                data: [],
+                z: 10,
+                axisLine: {
+                    show: false,
+                    lineStyle: {
+                        color: "#0B4A6B",
+                        width: 1,
+                        type: "solid"
+                    },
+                },
+                axisLabel: {
+                    interval: 0,
+                    show: true,
+                    color: "#0B4A6B",
+                    margin: 8,
+                    fontSize: 16
+                },
+            },
+            radiusAxis: {
+                min: 0,
+                max: 120,
+                interval: 20,
+                axisLine: {
+                    show: false,
+                    lineStyle: {
+                        color: "#0B3E5E",
+                        width: 1,
+                        type: "solid"
+                    },
+                },
+                axisLabel: {
+                    formatter: '{value} %',
+                    show: false,
+                    padding: [0, 0, 20, 0],
+                    color: "#0B3E5E",
+                    fontSize: 16
+                },
+                splitLine: {
+                    lineStyle: {
+                        color: "#0B3E5E",
+                        width: 2,
+                        type: "solid"
+                    }
+                }
+            },
+            calculable: true,
+            series: [{
+                type: 'pie',
+                radius: ["5%", "10%"],
+                hoverAnimation: false,
+                labelLine: {
+                    normal: {
+                        show: false,
+                        length: 30,
+                        length2: 55
+                    },
+                    emphasis: {
+                        show: false
+                    }
+                },
+                data: [{
+                    name: '',
+                    value: 0,
+                    itemStyle: {
+                        normal: {
+                            color: "#0B4A6B"
+                        }
+                    }
+                }]
+            }, {
+                type: 'pie',
+                radius: ["90%", "95%"],
+                hoverAnimation: false,
+                labelLine: {
+                    normal: {
+                        show: false,
+                        length: 30,
+                        length2: 55
+                    },
+                    emphasis: {
+                        show: false
+                    }
+                },
+                name: "",
+                data: [{
+                    name: '',
+                    value: 0,
+                    itemStyle: {
+                        normal: {
+                            color: "#0B4A6B"
+                        }
+                    }
+                }]
+            }, {
+                stack: 'a',
+                type: 'pie',
+                radius: ['20%', '80%'],
+                roseType: 'area',
+                zlevel: 10,
+                label: {
+                    normal: {
+                        show: true,
+                        formatter: "{c}",
+                        textStyle: {
+                            fontSize: 12,
+                        },
+                        position: 'outside'
+                    },
+                    emphasis: {
+                        show: true
+                    }
+                },
+                labelLine: {
+                    normal: {
+                        show: true,
+                        length: 20,
+                        length2: 55
+                    },
+                    emphasis: {
+                        show: false
+                    }
+                },
+                data: [
+                    { name: "创业公司", value: 63 },
+                    { name: "上市公司", value: 1457 },
+                    { name: "民营公司", value: 6304 },
+                    { name: "外资（欧美）", value: 159 },
+                    { name: "合资", value: 202 },
+                    { name: "外资（非欧美）", value: 102 },
+                    { name: "国企", value: 461 },
+                    { name: "事业单位", value: 24 },
+                    { name: "非营利组织", value: 0 },
+                    { name: "政府机关", value: 0 },
+                    { name: "外企代表处", value: 0 },
+                ]
+            },]
+        }
+        myChart.setOption(option);
+        window.onresize = () => {
+            myChart.resize()
+        };
+        var index = 1
+        var update = () => {
+            option.title.text = validCity[index]
+            option.series[2].data = data[validCity[index]]
+            myChart.setOption(option);
+            myChart.resize()
+            if (index >= 183) { index = 0 }
+            else index += 1
+        }
+        var creatTimer = () => {
+            timer = self.setInterval("update()", 1 * 1000);
+        }
+        creatTimer()
+    </script>
+    <!-- 散点地图 -->
+    <script type="text/javascript">
+        $(function () {
+
+            /***************** 地图散点 ******************/
+            //初始化echarts实例
+            const scatterMap = echarts.init(document.getElementById("scatterMap"));
+            //城市经纬度
+            const scatterGeo = cityInfo
+            var scatterVal = []
+            for (i = 0; citySalary[i] != null; i++) {
+                scatterVal.push({ name: citySalary[i].city, value: citySalary[i].value, salary: citySalary[i].salary })
+            }
+            //数据转换，转换后的格式：[{name: 'cityName', value: [lng, lat, val]}, {...}]
+            const convertScatterData = function (data) {
+                let res = [];
+                for (let i = 0; i < data.length; i++) {
+                    let geoCoord = scatterGeo[data[i].name];
+                    if (geoCoord) {
+                        res.push({
+                            name: data[i].name,
+                            value: geoCoord.concat(data[i].value),
+                            salary: data[i].salary
+                        });
+                    }
+                }
+                return res;
+            };
+            //地图配置项
+            const sactterMapOpt = {
+                title: {
+                    text: '',
+                    x: 'center',
+                    textStyle: {
+                        color: '#fff'
+                    }
+                },
+                legend: {
+                    data: ['岗位数量、平均薪酬'], //与series的name属性对应
+                    orient: 'vertical',
+                    y: 'bottom',
+                    x: 'right',
+                    textStyle: {
+                        color: '#fff'
+                    }
+                },
+                tooltip: {
+                    trigger: 'item',
+                    formatter: function (params) {
+                        return params.name + ': ' + params.value[2] + ', ' + params.data.salary;
+                    }
+                },
+                visualMap: {
+                    min: 0,
+                    max: 2000,
+                    calculable: true,
+                    inRange: {
+                        color: ['#edf5a8', '#f35f09', '#d94e5d'],
+                        symbolSize: [3, 15],
+                    },
+                    textStyle: {
+                        color: '#fff'
+                    },
+                },
+                geo: {
+                    map: 'china',
+                    roam: false, //开启鼠标缩放和漫游
+                    zoom: 1, //地图缩放级别
+                    selectedMode: false, //选中模式：single | multiple
+                    left: 0,
+                    right: 0,
+                    top: 0,
+                    bottom: 0,
+                    layoutCenter: ['50%', '50%'], //设置后left/right/top/bottom等属性无效
+                    layoutSize: '100%',
+                    label: {
+                        emphasis: {
+                            show: false
+                        }
+                    },
+                    itemStyle: {
+                        normal: {
+                            borderColor: '#2ab8ff',
+                            borderWidth: 1.5,
+                            areaColor: '#12235c'
+                        },
+                        emphasis: {
+                            areaColor: '#2AB8FF',
+                            borderWidth: 0,
+                            color: 'green'
+                        }
+                    }
+                },
+                series: [{
+                    name: '岗位数量、平均薪酬',
+                    type: 'scatter',
+                    coordinateSystem: 'geo',
+                    symbolSize: 12,
+                    label: {
+                        normal: {
+                            show: false
+                        },
+                        emphasis: {
+                            show: false
+                        }
+                    },
+                    itemStyle: {
+                        emphasis: {
+                            borderColor: '#fff',
+                            borderWidth: 1
+                        }
+                    },
+
+                    data: convertScatterData(scatterVal)
+                },
+                {
+                    type: 'effectScatter',
+                    coordinateSystem: 'geo',
+                    showEffectOn: 'render',
+                    rippleEffect: {
+                        period: 15,
+                        scale: 4,
+                        brushType: 'fill'
+                    },
+                    hoverAnimation: true,
+                    itemStyle: {
+                        normal: {
+                            color: '#ffff',
+                            shadowBlur: 10,
+                            shadowColor: '#333'
+                        }
+                    },
+                    data: convertScatterData(scatterVal)
+                }
+                ]
+            };
+            //渲染报表
+            scatterMap.setOption(sactterMapOpt);
+
+
+            /********** 浏览器窗口改变时，重置报表大小 ****************/
+            window.onresize = function () {
+                flyMap.resize();
+                scatterMap.resize();
+                worldMap.resize();
+                provinceMap.resize();
+                cityMap.resize();
+                countyMap.resize();
+            }
+        });
+
+    </script>
+    <!-- 词云 -->
+    <script type="text/javascript">
+        $(function () {
+            var chart = echarts.init(document.getElementById('wordCloud'));
+            const colorList = ['#3a96f5', '#5faaf7', '#78bafe', '#1563f2', '#add2f8', '#e24bf4', '#1acaff', '#ffde00', '#89fda5'];
+            var data = []
+            for (i = 0; i <= 100; i++) {
+                data.push({ name: description[i].description, value: description[i].value })
+            }
+            var maskImage = new Image();
+            maskImage.src = symbolUrl;
+            var option = {
+                tooltip: {
+                    show: true,
+                },
+                grid: {
+                    left: 0,
+                    bottom: 0,
+                    top: 0,
+                    right: 0,
+                },
+                xAxis: {
+                    type: 'category',
+                    show: false,
+                },
+                yAxis: {
+                    max: 100,
+                    show: false,
+                },
+                series: [
+                    {
+                        zlevel: -1,
+                        type: 'pictorialBar',
+                        name: 'pictorial',
+                        silent: true,
+                        symbol: 'image://' + symbolUrl, //按背景渲染云词
+                        symbolSize: ['94%', '74%'],
+                        symbolPosition: 'center',
+                        barWidth: '100%',
+                        barMaxWidth: '100%',
+                        itemStyle: {
+                            normal: {
+                                opacity: 0.4, //自己项目中这里可以设置0全透明，然后可以写一个div背景加载一个美化过的云图片，重合放在这个图表下面。
+                            },
+                        },
+                        data: [
+                            {
+                                value: 100,
+                            },
+                        ],
+                    },
+                    {
+                        type: 'wordCloud',
+                        sizeRange: [5, 30],
+                        rotationRange: [-90, 90],
+                        maskImage: maskImage,
+                        textPadding: 0,
+                        gridSize: 3, //用于标记画布可用性的网格大小（以像素为单位）//字距越大，字距越大。
+                        width: '90%',
+                        height: '70%',
+                        left: 'center',
+                        drawOutOfBound: false,
+                        textStyle: {
+                            color: function () {
+                                let index = Math.floor(Math.random() * colorList.length);
+                                return colorList[index];
+                            }
+                        },
+                        emphasis: {
+                            textStyle: {
+                                shadowBlur: 10,
+                                shadowColor: '#333'
+                            }
+                        },
+                        data: data,
+                    },
+                ],
+            };
+
+            chart.setOption(option);
+            window.onresize = () => {
+                chart.resize()
+            };
+        })
+    </script>
+    <!-- 折线图 -->
+    <script>
+        var app = {};
+
+        var chartDom = document.getElementById('line');
+        var linechart = echarts.init(chartDom);
+        var line;
+
+        line = {
+            tooltip: {
+                trigger: 'axis',
+                axisPointer: {
+                    type: 'cross',
+                    label: {
+                        backgroundColor: '#283b56'
+                    }
+                }
+            },
+            legend: {
+                data: ['平均薪酬', '数量']
+            },
+            toolbox: {
+                show: true,
+                feature: {
+                    dataView: { readOnly: false },
+                    restore: {},
+                    saveAsImage: {}
+                }
+            },
+            dataZoom: {
+                show: false,
+                start: 0,
+                end: 100
+            },
+            xAxis: [
+                {
+                    type: 'category',
+                    boundaryGap: true,
+                    data: (function () {
+                        var res = [];
+                        for(i=0;daySalary[i]!=null;i++){
+                            res.push(daySalary[i].day)
+                        }
+                        return res;
+                    })()
+                },
+                {
+                    type: 'category',
+                    boundaryGap: true,
+                    data: (function () {
+                        var res = [];
+                        var len = daySalary.length;
+                        while (len--) {
+                            res.push(daySalary.length - len - 1);
+                        }
+                        return res;
+                    })()
+                }
+            ],
+            yAxis: [
+                {
+                    type: 'value',
+                    scale: true,
+                    name: '平均薪酬',
+                    max: 3,
+                    min: 0,
+                    boundaryGap: [0.2, 0.2]
+                },
+                {
+                    type: 'value',
+                    scale: true,
+                    name: '数量',
+                    max: 50000,
+                    min: 0,
+                    boundaryGap: [0.2, 0.2]
+                }
+            ],
+            series: [
+                {
+                    name: '数量',
+                    type: 'bar',
+                    xAxisIndex: 1,
+                    yAxisIndex: 1,
+                    data: (function () {
+                        var res = [];
+                        for(i=0;daySalary[i]!=null;i++){
+                            res.push(daySalary[i].value)
+                        }
+                        return res;
+                    })()
+                },
+                {
+                    name: '平均薪酬',
+                    type: 'line',
+                    data: (function () {
+                        var res = [];
+                        for(i=0;daySalary[i]!=null;i++){
+                            res.push(daySalary[i].salary)
+                        }
+                        return res;
+                    })()
+                }
+            ]
+        };
+
+        
+
+        linechart.setOption(line);
+    </script>
+</body>
+
+</html>
