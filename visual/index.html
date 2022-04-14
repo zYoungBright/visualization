@@ -777,8 +777,7 @@
                 ],
             };
 
-            chart.setOption(option);
-            setTimeout(chart.resize(), 5000);
+            chart.setOption(option,true,true);
             window.onresize = () => {
                 chart.resize()
             };
