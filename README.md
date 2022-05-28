@@ -1,5 +1,5 @@
 # visualization
-互联网行业分析，数据源于前程无忧招聘网站，数据分析基于spark平台，数据大屏基于echarts
+互联网行业分析，数据源于前程无忧招聘网站，数据分析基于Hadoop+Spark平台，数据大屏基于Echarts
 
 ### 数据源
 各个城市的精度data/BaiduMap_cityCenter.txt来源于百度地图开放平台，crawler/cityInfo.py含爬取前程无忧各个城市的编号，爬取的岗位关键字在data/job.csv(静态数据，我是从别的招聘网获取的，前程无忧的分类比较广)，爬取代码crawler/qcwy.py，结果为/data/data.csv
